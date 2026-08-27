@@ -285,9 +285,17 @@ server <- function(input, output, session) {
       return()
     }
 
+    # numericInput accepts decimals, and truncating to integer would score 7.9
+    # as a correct 7. Treat a fractional entry as a slip rather than a wrong
+    # answer, since no cribbage hand is worth a fraction of a point.
+    if (guess != round(guess)) {
+      feedback(list(status = "prompt", text = "Enter a whole number of points."))
+      return()
+    }
+
     scored <- score_hand(layout()$hand, layout()$starter)
 
-    if (identical(as.integer(guess), scored$total)) {
+    if (isTRUE(guess == scored$total)) {
       feedback(list(
         status = "correct",
         text = paste0("Correct — ", describe_score(scored), ".")
