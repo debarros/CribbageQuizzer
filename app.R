@@ -28,6 +28,24 @@ CARD_CSS <- "
 .cq-prompt { color: #7b8794; }
 "
 
+# Let Enter in the answer field stand in for clicking "Check answer".
+#
+# Shiny debounces keystrokes by 250ms before sending a value to the server, so
+# an Enter pressed straight after typing would otherwise check the PREVIOUS
+# value. Firing a change event first flushes the current value immediately
+# (Shiny sends change events without the rate policy), and because both
+# messages queue on the same websocket in order, the server sees the new
+# number before it sees the button click.
+ENTER_JS <- "
+$(document).on('keydown', '#guess', function(e) {
+  if (e.key === 'Enter') {
+    e.preventDefault();
+    $(this).trigger('change');
+    $('#check').click();
+  }
+});
+"
+
 # Render one card as a rounded tile, red for hearts and diamonds.
 card_tag <- function(card) {
   div(
@@ -52,7 +70,10 @@ layout_tags <- function(layout) {
 }
 
 ui <- fluidPage(
-  tags$head(tags$style(HTML(CARD_CSS))),
+  tags$head(
+    tags$style(HTML(CARD_CSS)),
+    tags$script(HTML(ENTER_JS))
+  ),
 
   titlePanel("Cribbage Quizzer"),
 
