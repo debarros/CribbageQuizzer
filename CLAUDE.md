@@ -29,7 +29,7 @@ adjacent to `app.R` before evaluating it (the `shiny.autoload.r` option, TRUE by
 R 4.5.2 is installed at `C:\Program Files\R\R-4.5.2` but is **not on PATH**. Invoke it by full path,
 or add `C:\Program Files\R\R-4.5.2\bin` to PATH first.
 
-Installed: `shiny` 1.14.0, `bslib` 0.12.0. **Not installed:** `testthat`, `shinytest2`, `renv`.
+Installed: `shiny` 1.14.0, `bslib` 0.12.0, `testthat` 3.3.2. **Not installed:** `shinytest2`, `renv`.
 Install what a task needs rather than assuming it loads. There is no lockfile or dependency manifest —
 dependencies are whatever the user library happens to contain.
 
@@ -50,14 +50,14 @@ Syntax-check the app without launching a server — the fastest feedback loop wh
 "/c/Program Files/R/R-4.5.2/bin/Rscript.exe" -e 'invisible(parse("app.R"))'
 ```
 
-Testing is not set up yet. Once `R/` and `tests/testthat/` exist, install `testthat` first
-(`install.packages("testthat")`), then:
+Run the full test suite (212 assertions across `test-scoring.R` and `test-cards.R`):
 
 ```bash
 "/c/Program Files/R/R-4.5.2/bin/Rscript.exe" -e 'testthat::test_dir("tests/testthat")'
 ```
 
-Single test file:
+Single test file — `tests/testthat/helper-cribbage.R` sources `R/` and defines the `cd()`/`lay()`/
+`total_of()` card-string shorthands, and testthat loads it for both commands:
 
 ```bash
 "/c/Program Files/R/R-4.5.2/bin/Rscript.exe" -e 'testthat::test_file("tests/testthat/test-scoring.R")'
