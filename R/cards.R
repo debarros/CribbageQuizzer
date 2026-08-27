@@ -31,6 +31,19 @@ card_label <- function(cards, symbols = FALSE) {
   paste0(RANKS[cards$rank], suit_chr)
 }
 
+#' Spoken names, for accessible labels: "Five of Hearts", not "5H".
+#'
+#' Screen readers announce the suit glyphs inconsistently (and "10H" as "ten
+#' H"), so anything a user hears rather than sees goes through here.
+RANK_NAMES <- c("Ace", "Two", "Three", "Four", "Five", "Six", "Seven", "Eight",
+                "Nine", "Ten", "Jack", "Queen", "King")
+SUIT_NAMES <- c(S = "Spades", H = "Hearts", D = "Diamonds", C = "Clubs")
+
+#' Spoken name of each card, vectorised over rows.
+card_name <- function(cards) {
+  paste(RANK_NAMES[cards$rank], "of", unname(SUIT_NAMES[cards$suit]))
+}
+
 #' Parse compact card ids like "5H", "10D" or "AS" into card rows.
 #'
 #' The inverse of card_label(symbols = FALSE). Vectorised; returns one row per
