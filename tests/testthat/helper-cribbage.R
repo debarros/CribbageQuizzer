@@ -7,14 +7,8 @@ for (f in list.files(file.path("..", "..", "R"), pattern = "[.]R$", full.names =
   source(f)
 }
 
-#' Parse a compact card string like "5H", "10D" or "JS" into a one-row card.
-cd <- function(x) {
-  data.frame(
-    rank = as.integer(match(sub(".$", "", x), RANKS)),
-    suit = substr(x, nchar(x), nchar(x)),
-    stringsAsFactors = FALSE
-  )
-}
+#' Shorthand for card_from_id(), which tests use constantly.
+cd <- function(x) card_from_id(x)
 
 #' Build a layout from five card strings: four hand cards then the starter.
 lay <- function(...) {

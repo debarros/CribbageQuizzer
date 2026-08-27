@@ -31,6 +31,25 @@ card_label <- function(cards, symbols = FALSE) {
   paste0(RANKS[cards$rank], suit_chr)
 }
 
+#' Parse compact card ids like "5H", "10D" or "AS" into card rows.
+#'
+#' The inverse of card_label(symbols = FALSE). Vectorised; returns one row per
+#' id, in the order given. Card ids are what the UI passes back when a card is
+#' clicked, so an unparseable id is an error rather than a silent NA.
+card_from_id <- function(ids) {
+  ids <- as.character(ids)
+  rank_chr <- substr(ids, 1L, nchar(ids) - 1L)
+  suit_chr <- substr(ids, nchar(ids), nchar(ids))
+
+  rank <- match(rank_chr, RANKS)
+  bad <- is.na(rank) | !(suit_chr %in% SUITS)
+  if (any(bad)) {
+    stop("Unparseable card id: ", paste(ids[bad], collapse = ", "), call. = FALSE)
+  }
+
+  data.frame(rank = as.integer(rank), suit = suit_chr, stringsAsFactors = FALSE)
+}
+
 #' Deal a cribbage hand: 4 cards plus a starter, drawn without replacement.
 #'
 #' Returns a list with `hand` (4 rows) and `starter` (1 row).

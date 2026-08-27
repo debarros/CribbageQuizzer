@@ -19,6 +19,30 @@ test_that("card labels render ranks and suits", {
   expect_equal(card_label(cd("AS"), symbols = TRUE), "A♠")
 })
 
+test_that("card ids round-trip through card_from_id and card_label", {
+  ids <- c("AS", "2H", "9D", "10C", "JS", "QH", "KD")
+  expect_equal(card_label(card_from_id(ids)), ids)
+
+  # Every card in the deck survives a round trip, including the two-character
+  # rank "10" that makes naive substr() parsing wrong.
+  deck <- new_deck()
+  expect_equal(card_label(card_from_id(card_label(deck))), card_label(deck))
+
+  expect_equal(card_from_id("10D")$rank, 10L)
+  expect_equal(card_from_id("AS")$rank, 1L)
+  expect_equal(card_from_id("KH")$rank, 13L)
+  expect_equal(card_from_id("KH")$suit, "H")
+  expect_equal(nrow(card_from_id(character(0))), 0L)
+})
+
+test_that("unparseable card ids are an error, not a silent NA", {
+  expect_error(card_from_id("1H"), "Unparseable")    # no such rank
+  expect_error(card_from_id("5X"), "Unparseable")    # no such suit
+  expect_error(card_from_id("11H"), "Unparseable")
+  expect_error(card_from_id(""), "Unparseable")
+  expect_error(card_from_id(c("5H", "ZZ")), "ZZ")
+})
+
 test_that("dealing draws five distinct cards without replacement", {
   set.seed(99)
   for (i in seq_len(50L)) {
