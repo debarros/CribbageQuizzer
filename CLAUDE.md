@@ -4,23 +4,25 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project status
 
-CribbageQuizzer is an **R Shiny web app** for drilling cribbage hand scoring. It is at the skeleton
-stage: `CribbageQuizzer/app.R` is the stock RStudio Shiny template with the intended design written
-out as comments. **No cribbage logic, no UI inputs, and no tests exist yet** — the `ui` has empty
-`sidebarPanel`/`mainPanel` bodies and `server` has an empty function body.
+CribbageQuizzer is an **R Shiny web app** for drilling cribbage hand scoring. Scoring and deck logic
+are implemented in `R/`; the **UI is still the stock RStudio Shiny template** — `CribbageQuizzer/app.R`
+has empty `sidebarPanel`/`mainPanel` bodies and an empty `server` body, with the intended design
+written out as comments. There are no automated tests yet.
 
 ## Layout
 
-The app lives in a **nested subdirectory**, not the project root:
-
 ```
-CribbageQuizzer/            <- project root (git repo, .Rproj)
+CribbageQuizzer/            <- project root (git repo, .Rproj) AND the Shiny app directory
 ├── CribbageQuizzer.Rproj
-└── CribbageQuizzer/
-    └── app.R               <- single-file Shiny app (ui + server + shinyApp)
+├── app.R                   <- single-file Shiny app (ui + server + shinyApp)
+└── R/                      <- pure logic, no Shiny (unit-testable)
+    ├── cards.R             <- deck, card representation, dealing
+    └── scoring.R           <- score_hand() and its five component scorers
 ```
 
-Paths in commands below are relative to the project root, so the app directory is `CribbageQuizzer`.
+`app.R` sits next to `R/` deliberately: Shiny auto-sources every `.R` file in an `R/` directory
+adjacent to `app.R` before evaluating it (the `shiny.autoload.r` option, TRUE by default), so
+`app.R` must NOT call `source()` on those files. Verified working on shiny 1.14.0.
 
 ## Environment
 
@@ -36,7 +38,7 @@ dependencies are whatever the user library happens to contain.
 Run the app:
 
 ```bash
-"/c/Program Files/R/R-4.5.2/bin/Rscript.exe" -e 'shiny::runApp("CribbageQuizzer", port = 3838, launch.browser = FALSE)'
+"/c/Program Files/R/R-4.5.2/bin/Rscript.exe" -e 'shiny::runApp(".", port = 3838, launch.browser = FALSE)'
 ```
 
 `runApp()` blocks. Run it in the background from a tool call and stop it when done rather than
@@ -45,7 +47,7 @@ waiting on it.
 Syntax-check the app without launching a server — the fastest feedback loop while editing:
 
 ```bash
-"/c/Program Files/R/R-4.5.2/bin/Rscript.exe" -e 'invisible(parse("CribbageQuizzer/app.R"))'
+"/c/Program Files/R/R-4.5.2/bin/Rscript.exe" -e 'invisible(parse("app.R"))'
 ```
 
 Testing is not set up yet. Once `R/` and `tests/testthat/` exist, install `testthat` first
@@ -77,8 +79,9 @@ Cribbage scoring is the part worth getting right, and it is pure logic — fifte
 flushes, and his nobs over a 4-card hand plus the starter card. **Keep scoring and deck/hand logic in
 plain R functions under `R/`, entirely free of Shiny reactives**, so it can be unit-tested without
 spinning up an app. Reactive code in `app.R` should call into those functions, not reimplement them.
-A single-file `app.R` does not auto-source `R/`; add explicit `source()` calls (or restructure into a
-`ui.R`/`server.R`/`global.R` app) when that directory appears.
+`score_hand(hand, starter, is_crib = FALSE)` is the entry point, returning `total` plus a named
+`breakdown` vector; `describe_score()` renders that as quiz feedback. Ranks are stored 1-13, not as
+point values, because runs need the true ordering while J/Q/K are all worth 10.
 
 Enumerating scoring combinations is combinatorial; prefer testing scoring against known hands with
 hand-checked point totals over trusting a clever implementation. The scoring edge cases that catch
