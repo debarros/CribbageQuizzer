@@ -5,6 +5,6 @@ account: debarros
 server: shinyapps.io
 hostUrl: https://api.shinyapps.io/v1
 appId: 17768892
-bundleId: 12725091
+bundleId: 12725200
 url: https://debarros.shinyapps.io/CribbageQuizzer/
 version: 1
