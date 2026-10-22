@@ -6,8 +6,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 CribbageQuizzer is an **R Shiny web app** for drilling cribbage hand scoring. Both modes are built:
 *Quiz Me* deals a random layout and checks the user's answer; *Calculate This* lets the user build a
-specific layout from a card picker and shows its score. Scoring and deck logic live in `R/` and are
-covered by the test suite.
+specific layout from a card picker and shows its score. *My Stats* shows the user's Quiz Me record,
+which is kept in their browser's `localStorage` (no accounts, nothing stored server-side). Scoring,
+deck and stats logic live in `R/` and are covered by the test suite.
 
 ## Layout
 
@@ -17,10 +18,12 @@ CribbageQuizzer/            <- project root (git repo, .Rproj) AND the Shiny app
 ├── app.R                   <- single-file Shiny app: view layer only (ui + server + shinyApp)
 ├── R/                      <- pure logic, no Shiny (unit-testable)
 │   ├── cards.R             <- deck, card ids/names, dealing, layout validation
-│   └── scoring.R           <- score_hand() and its five component scorers
+│   ├── scoring.R           <- score_hand() and its five component scorers
+│   └── stats.R             <- quiz performance record: recording, JSON round trip, summary
 └── tests/testthat/
     ├── helper-cribbage.R   <- sources R/, defines cd()/lay()/total_of() shorthands
     ├── test-scoring.R      <- scoring rules against hand-checked totals
+    ├── test-stats.R        <- stats recording and repairing tampered localStorage data
     ├── test-cards.R        <- deck, card ids, dealing, validation
     ├── test-calculate-this.R <- Calculate This state machine, via shiny::testServer
     ├── test-quiz.R         <- Quiz Me answer checking, via shiny::testServer
@@ -90,6 +93,13 @@ hand-checked point totals over trusting a clever implementation. The edge cases 
 implementations: runs count multiplicatively with duplicated ranks (a double run), a 4-card flush in
 hand scores 4 but only 5 if the starter matches, a 5-card flush needs the starter, aces are low so
 K-A-2 is not a run, and a jack as *starter* is his heels rather than nobs.
+
+Quiz stats are a JSON record in the browser's `localStorage`. On connect the browser sends it once as
+`input$stored_stats` (an empty string when absent or blocked); the server keeps the live copy and
+sends the whole record back through the `cq_stats_save` message after every change. Nothing is saved
+until that load arrives, so an empty in-memory record can't overwrite a real one. `stats_from_json()`
+treats stored data as untrusted and repairs or discards it — users can edit `localStorage`, and a
+format change needs a new `STATS_VERSION`. Only the first answer to each dealt hand is recorded.
 
 ## Things that will silently break if you "simplify" them
 
