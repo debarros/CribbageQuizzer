@@ -6,9 +6,15 @@
 # This file is the view layer only: it renders cards and feedback and calls
 # into score_hand() / describe_score(). Keep scoring rules out of it.
 #
-# Two modes share the sidebar:
+# Three modes share the sidebar:
 #   Quiz Me         deals a random layout and asks the user to score it
 #   Calculate This  lets the user build a specific layout and see it scored
+#   My Stats        shows how the user has done on Quiz Me
+#
+# Stats live in the browser's localStorage, not on the server: the server
+# receives them once on connect (input$stored_stats) and sends the updated
+# record back after every change (the cq_stats_save message). R/stats.R owns
+# the record's rules; this file only moves it and displays it.
 #
 # Interaction is meant to work with a mouse, a keyboard or a touchscreen, on a
 # phone, tablet or desktop. Three rules follow from that and are easy to undo
@@ -113,6 +119,20 @@ CARD_CSS <- "
    fail WCAG 1.4.4 Resize Text. */
 .form-control { font-size: 16px; height: 44px; }
 
+/* ---- My Stats ---- */
+.cq-tally { font-size: 13px; color: #5b6670; margin-top: 6px; }
+.cq-tiles { display: flex; gap: 10px; flex-wrap: wrap; margin: 8px 0 20px;
+            padding: 0; list-style: none; }
+.cq-tile { border: 1px solid #e4e8ec; border-radius: 8px; padding: 10px 14px;
+           min-width: 112px; background: #fff; }
+.cq-tile-val { display: block; font-size: 24px; font-weight: 700; color: #2c3e50; }
+.cq-tile-name { display: block; font-size: 13px; color: #5b6670; }
+.cq-stats-table { max-width: 520px; }
+.cq-stats-table td, .cq-stats-table th { text-align: right; }
+.cq-stats-table td:first-child, .cq-stats-table th:first-child { text-align: left;
+                                                                 text-transform: capitalize; }
+.cq-stats-note { font-size: 13px; color: #5b6670; margin: 14px 0; }
+
 .cq-visually-hidden { position: absolute; width: 1px; height: 1px; padding: 0;
                       margin: -1px; overflow: hidden; clip: rect(0 0 0 0);
                       white-space: nowrap; border: 0; }
@@ -200,6 +220,22 @@ Shiny.addCustomMessageHandler('cq_selection', function(msg) {
   if (!cqPickCards().some(function(c) { return c.getAttribute('tabindex') === '0'; })) {
     cqSetRoving(cqPickCards()[0]);
   }
+});
+
+// Quiz stats are kept in this browser only. Hand the stored record to the
+// server once per connection -- an empty string when there is none, or when
+// storage is blocked (private browsing, disabled site data), so the server
+// still knows loading has finished.
+var CQ_STATS_KEY = 'cribbageQuizzer.stats';
+$(document).on('shiny:connected', function() {
+  var stored = null;
+  try { stored = window.localStorage.getItem(CQ_STATS_KEY); } catch (e) {}
+  Shiny.setInputValue('stored_stats', stored === null ? '' : stored, {priority: 'event'});
+});
+
+// The server sends the whole record back after every change, reset included.
+Shiny.addCustomMessageHandler('cq_stats_save', function(msg) {
+  try { window.localStorage.setItem(CQ_STATS_KEY, msg.json); } catch (e) {}
 });
 
 // The slot row IS re-rendered, so put focus back where the user was standing.
@@ -350,6 +386,65 @@ score_tags <- function(ids) {
   )
 }
 
+# My Stats: headline figures as tiles, then accuracy per scoring category.
+stats_tags <- function(stats) {
+  s <- summarize_stats(stats)
+  if (s$answered == 0L) {
+    return(p(class = "cq-prompt",
+             "No answers yet. Score a few hands in Quiz Me and your results will appear here."))
+  }
+
+  tile <- function(value, name) {
+    tags$li(class = "cq-tile",
+            span(class = "cq-tile-val", value),
+            span(class = "cq-tile-name", name))
+  }
+  missed <- s$answered - s$correct
+
+  tagList(
+    tags$ul(
+      class = "cq-tiles",
+      `aria-label` = "Your quiz results",
+      tile(s$answered, if (s$answered == 1L) "hand answered" else "hands answered"),
+      tile(s$accuracy, "correct overall"),
+      tile(s$recent_accuracy, sprintf("correct in your last %d", s$recent_count)),
+      tile(s$streak, "current streak"),
+      tile(s$best_streak, "best streak")
+    ),
+    if (missed > 0L) {
+      p(class = "cq-prompt", sprintf(
+        "Of the %d %s you missed, you counted too low on %d and too high on %d.",
+        missed, if (missed == 1L) "hand" else "hands", s$under, s$over))
+    },
+    # A real table: a screen reader can announce each figure with its headers.
+    tags$table(
+      class = "table table-condensed cq-stats-table",
+      tags$caption("Accuracy on hands that scored each category"),
+      tags$thead(tags$tr(
+        tags$th(scope = "col", "Category"),
+        tags$th(scope = "col", "Hands"),
+        tags$th(scope = "col", "Correct"),
+        tags$th(scope = "col", "Accuracy")
+      )),
+      tags$tbody(lapply(seq_len(nrow(s$categories)), function(i) {
+        row <- s$categories[i, ]
+        tags$tr(
+          tags$th(scope = "row", row$category),
+          tags$td(row$seen),
+          tags$td(row$right),
+          tags$td(if (is.na(row$pct)) {
+            # A bare dash is read aloud as "em dash".
+            tagList(span(`aria-hidden` = "true", "\u2014"),
+                    span(class = "cq-visually-hidden", "none yet"))
+          } else {
+            row$pct
+          })
+        )
+      }))
+    )
+  )
+}
+
 ui <- fluidPage(
   # Without this the page renders as bare <html>, and a screen reader speaks
   # English card names with whatever voice the user defaults to.
@@ -369,7 +464,7 @@ ui <- fluidPage(
       width = 3,
       radioButtons(
         "mode", "Mode",
-        choices = c("Quiz Me" = "quiz", "Calculate This" = "calc"),
+        choices = c("Quiz Me" = "quiz", "Calculate This" = "calc", "My Stats" = "stats"),
         selected = "quiz"
       )
     ),
@@ -387,7 +482,8 @@ ui <- fluidPage(
           actionButton("check", "Check answer", class = "btn-primary"),
           actionButton("deal", "New hand")
         ),
-        uiOutput("feedback", `aria-live` = "polite", role = "status")
+        uiOutput("feedback", `aria-live` = "polite", role = "status"),
+        uiOutput("quiz_tally")
       ),
 
       conditionalPanel(
@@ -399,6 +495,16 @@ ui <- fluidPage(
         div(class = "cq-actions", actionButton("clear_selection", "Clear all")),
         picker_tags(),
         uiOutput("calc_score", `aria-live` = "polite")
+      ),
+
+      conditionalPanel(
+        condition = "input.mode == 'stats'",
+        uiOutput("stats_display"),
+        p(class = "cq-stats-note",
+          "Your stats are saved in this browser only. They are not sent anywhere,",
+          "they do not follow you to another device, and clearing this site's",
+          "data erases them."),
+        div(class = "cq-actions", actionButton("reset_stats", "Reset my stats"))
       )
     )
   )
@@ -407,6 +513,46 @@ ui <- fluidPage(
 server <- function(input, output, session) {
   deck <- new_deck()
   deck_ids <- card_label(deck)
+
+  # ---- Stats ------------------------------------------------------------
+
+  # The browser's stored record arrives once, just after connecting. Until then
+  # nothing is saved, so an empty in-memory record cannot overwrite a real one.
+  # (An answer checked in that split second is overwritten by the load.)
+  stats <- reactiveVal(empty_stats())
+  stats_loaded <- reactiveVal(FALSE)
+
+  observeEvent(input$stored_stats, {
+    if (stats_loaded()) return()
+    stats(stats_from_json(input$stored_stats))
+    stats_loaded(TRUE)
+  })
+
+  # Each tab keeps its own copy, so with two tabs open the last one to save wins.
+  save_stats <- function(s) {
+    stats(s)
+    if (stats_loaded()) {
+      session$sendCustomMessage("cq_stats_save", list(json = stats_to_json(s)))
+    }
+  }
+
+  observeEvent(input$reset_stats, {
+    showModal(modalDialog(
+      title = "Reset your stats?",
+      "This erases every Quiz Me result saved in this browser. It cannot be undone.",
+      footer = tagList(
+        modalButton("Keep my stats"),
+        actionButton("confirm_reset_stats", "Reset", class = "btn-danger")
+      )
+    ))
+  })
+
+  observeEvent(input$confirm_reset_stats, {
+    removeModal()
+    save_stats(empty_stats())
+  })
+
+  output$stats_display <- renderUI(stats_tags(stats()))
 
   # ---- Quiz Me ----------------------------------------------------------
 
@@ -417,9 +563,14 @@ server <- function(input, output, session) {
   # NULL until the user checks an answer; cleared whenever a new hand is dealt.
   feedback <- reactiveVal(NULL)
 
+  # Only the first answer to a hand counts towards the stats; otherwise a wrong
+  # answer followed by the total from the feedback would score as a success.
+  hand_recorded <- reactiveVal(FALSE)
+
   observeEvent(input$deal, {
     layout(deal_hand(deck))
     feedback(NULL)
+    hand_recorded(FALSE)
     updateNumericInput(session, "guess", value = NA)
   })
 
@@ -443,6 +594,11 @@ server <- function(input, output, session) {
 
     scored <- score_hand(layout()$hand, layout()$starter)
 
+    if (!hand_recorded()) {
+      hand_recorded(TRUE)
+      save_stats(record_answer(stats(), scored, guess))
+    }
+
     if (isTRUE(guess == scored$total)) {
       feedback(list(
         status = "correct",
@@ -465,6 +621,13 @@ server <- function(input, output, session) {
       "cq-feedback cq-prompt"
     )
     div(class = css_class, fb$text)
+  })
+
+  output$quiz_tally <- renderUI({
+    s <- stats()
+    if (s$answered == 0L) return(NULL)
+    p(class = "cq-tally", sprintf("%d of %d correct \u00b7 streak %d",
+                                  s$correct, s$answered, s$streak))
   })
 
   # ---- Calculate This ---------------------------------------------------
@@ -530,7 +693,7 @@ server <- function(input, output, session) {
   # not always arrive, which leaves the whole Calculate This panel permanently
   # blank on the first switch into it. These outputs are cheap, so opt them out
   # of suspension entirely rather than depending on visibility tracking.
-  for (id in c("calc_slots", "calc_hint", "calc_score")) {
+  for (id in c("calc_slots", "calc_hint", "calc_score", "stats_display")) {
     outputOptions(output, id, suspendWhenHidden = FALSE)
   }
 }
