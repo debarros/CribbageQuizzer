@@ -226,8 +226,14 @@ Shiny.addCustomMessageHandler('cq_selection', function(msg) {
 // server once per connection -- an empty string when there is none, or when
 // storage is blocked (private browsing, disabled site data), so the server
 // still knows loading has finished.
+//
+// This must wait for shiny:sessioninitialized, not shiny:connected. An input
+// set on connect is flushed ahead of the Shiny init message, taking the
+// first visibility flags of the outputs with it; init then reports them
+// hidden, the visible state is never re-sent, and every Quiz Me output stays
+// suspended -- no cards, and Check answer does nothing.
 var CQ_STATS_KEY = 'cribbageQuizzer.stats';
-$(document).on('shiny:connected', function() {
+$(document).one('shiny:sessioninitialized', function() {
   var stored = null;
   try { stored = window.localStorage.getItem(CQ_STATS_KEY); } catch (e) {}
   Shiny.setInputValue('stored_stats', stored === null ? '' : stored, {priority: 'event'});

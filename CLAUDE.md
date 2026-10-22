@@ -119,6 +119,9 @@ Each of these was a real bug, and each looks like pointless complexity until it 
 - **Calculate This outputs set `suspendWhenHidden = FALSE`.** Outputs starting inside a hidden
   `conditionalPanel` are suspended, and the notice that they became visible does not reliably arrive,
   leaving the panel permanently blank on first switch.
+- **Stored stats are sent on `shiny:sessioninitialized`, not `shiny:connected`.** An input set on
+  connect is flushed before Shiny's init message, which then marks every visible output hidden:
+  Quiz Me shows no cards and Check answer does nothing, with no error anywhere.
 - **The pick observer checks `is.character(id) && length(id) == 1` first.** A vector reaching the
   `%in%` tests throws "the condition has length > 1", and Shiny answers an unhandled observer error
   by closing the session.
