@@ -1,0 +1,4 @@
+#!/bin/sh
+# The pre-commit shim of cribbage, rendered by pjdtools.render v2 from pjdtools 0.13.0: a no-op until the
+# records tools exist (design 3.1, `pjd validate records --staged`).
+exit 0

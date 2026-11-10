@@ -1,0 +1,10 @@
+#!/bin/sh
+# The commit-msg shim of cribbage, rendered by pjdtools.render v2 from pjdtools 0.13.0; do not edit by hand.
+# It runs pjdtools.hooks.commit_msg from the repository's pinned environment; when that environment is not
+# built it refuses the commit and names the command that builds it.
+PY="C:/Users/pjdeb/src/.envs/cribbage/4bbec4431ca5/Scripts/python.exe"
+if [ ! -f "$PY" ]; then
+    echo "commit-msg: the pinned environment $PY is not built; run: python -I -m pjdtools.env build cribbage" >&2
+    exit 1
+fi
+exec "$PY" -I -m pjdtools.hooks.commit_msg "$@"

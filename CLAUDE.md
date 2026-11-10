@@ -120,3 +120,28 @@ Each of these was a real bug, and each looks like pointless complexity until it 
   5.87:1; the `#7b8794` it replaced was 3.66:1.
 - **`.form-control` is pinned to 16px.** Under 16px, iOS Safari zooms the viewport when the answer
   field takes focus. Fixing it with `maximum-scale`/`user-scalable=no` would fail WCAG 1.4.4.
+
+## The apparatus (plan `cribbage/pin`, Phase 3 of the machine transition)
+
+This repository is pinned to one release of PJ's shared Python library: `.pjd/pyproject.toml` names
+`pjdtools==0.13.0` from the flat index `C:/Users/pjdeb/src/.index`, `.pjd/uv.lock` locks it, and
+`C:/Users/pjdeb/src/.envs/cribbage/<the lock's first twelve hex digits>` is the environment built from that lock.
+Every hook in `.claude/settings.json` runs that environment's interpreter, and the PreToolUse entries carry
+`onFailure: "block"`, so a Bash or PowerShell call is denied while the environment is missing. Rebuild it from a
+terminal with `python -I -m pjdtools.env build cribbage --project C:/Users/pjdeb/Documents/CribbageQuizzer/.pjd`.
+
+Five files are rendered, never edited: `.claude/settings.json`, `.githooks/commit-msg`, `.githooks/pre-commit`,
+`.claude/rules/apparatus/land.md` and `.claude/skills/apparatus-land/SKILL.md`. They are rewritten by
+`<the pinned environment>/Scripts/pjd.exe render cribbage --tree <this checkout>`, and a change to this
+repository's row of `C:/Users/pjdeb/src/machine/repos.toml`, to whether `ops/memory/MEMORY.md` exists, or to
+`.pjd/project.toml`'s `[permissions] allow` changes what they say. `.gitattributes` holds `* -text`, so every file
+is stored and checked out verbatim whatever a checkout's git configuration says; after changing it, repair the
+working tree with `git read-tree HEAD` and then `git checkout-index -f -a` (without the first, the second skips
+files whose size and mtime already match the disk), never with `git add --renormalize .`, which would commit CRLF.
+
+Memory is committed (Decision 252A): the notes are `ops/memory/`, their index is imported below, and the rendered
+`.claude/settings.json` sets `autoMemoryEnabled: false` (render v2 writes it while `ops/memory/MEMORY.md` exists),
+so a session writes a new note there, with its line in `ops/memory/MEMORY.md`, and commits it. A session started in
+a subfolder of a checkout reads no project settings and keeps auto memory.
+
+@ops/memory/MEMORY.md
