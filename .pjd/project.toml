@@ -1,0 +1,10 @@
+# cribbage's adapter (design 3.1): pjd adopt and pjd run launch [commands] battery.
+# The proof of a consumer with no Python battery is the hook replay (design 3.4): the tool calls
+# this repository's sessions made, replayed through the released and the candidate guard.
+# --released is left out on purpose: its default is the environment that the trunk's .pjd/uv.lock
+# names, which at an adoption is the release being moved from. Until machine/consumer-hubs makes
+# the trunk, this command exits 2 and nothing runs it (plan cribbage/pin, Decision 359A).
+schema = 1
+
+[commands]
+battery = ["{python}", "-I", "-m", "pjdtools.replay", "cribbage", "--candidate", "{python}"]

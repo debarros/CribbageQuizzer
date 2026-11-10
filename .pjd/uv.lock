@@ -1,0 +1,22 @@
+version = 1
+revision = 5
+requires-python = ">=3.13"
+
+[[package]]
+name = "cribbage-pin"
+version = "0"
+source = { virtual = "." }
+dependencies = [
+    { name = "pjdtools" },
+]
+
+[package.metadata]
+requires-dist = [{ name = "pjdtools", specifier = "==0.13.0", index = "file:///C:/Users/pjdeb/src/.index" }]
+
+[[package]]
+name = "pjdtools"
+version = "0.13.0"
+source = { registry = "C:/Users/pjdeb/src/.index" }
+wheels = [
+    { path = "C:/Users/pjdeb/src/.index/pjdtools-0.13.0-py3-none-any.whl" },
+]
