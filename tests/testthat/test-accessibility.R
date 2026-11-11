@@ -196,3 +196,10 @@ test_that("the answer field is big enough not to trigger iOS focus zoom", {
   expect_match(app$CARD_CSS, ".form-control { font-size: 16px; height: 44px; }",
                fixed = TRUE)
 })
+
+test_that("stored stats are sent after the session initializes, not on connect", {
+  # An input set on shiny:connected is flushed before Shiny's init message and
+  # leaves every visible output marked hidden: Quiz Me deals no cards.
+  expect_false(grepl("'shiny:connected'", app$APP_JS, fixed = TRUE))
+  expect_match(app$APP_JS, "'shiny:sessioninitialized'", fixed = TRUE)
+})
