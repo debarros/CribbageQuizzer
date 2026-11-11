@@ -141,7 +141,8 @@ This repository is pinned to one release of PJ's shared Python library: `.pjd/py
 `C:/Users/pjdeb/src/.envs/cribbage/<the lock's first twelve hex digits>` is the environment built from that lock.
 Every hook in `.claude/settings.json` runs that environment's interpreter, and the PreToolUse entries carry
 `onFailure: "block"`, so a Bash or PowerShell call is denied while the environment is missing. Rebuild it from a
-terminal with `python -I -m pjdtools.env build cribbage --project C:/Users/pjdeb/Documents/CribbageQuizzer/.pjd`.
+terminal with `python -I -m pjdtools.env build cribbage --project <this checkout>/.pjd` (the Documents clone until
+the cutover, the trunk or a worktree after it).
 
 Five files are rendered, never edited: `.claude/settings.json`, `.githooks/commit-msg`, `.githooks/pre-commit`,
 `.claude/rules/apparatus/land.md` and `.claude/skills/apparatus-land/SKILL.md`. They are rewritten by

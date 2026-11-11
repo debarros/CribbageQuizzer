@@ -1,0 +1,11 @@
+replay of cribbage's tool calls: released C:/Users/pjdeb/AppData/Local/Programs/Python/Python313/python.exe; candidate C:/Users/pjdeb/src/.envs/cribbage/4bbec4431ca5/Scripts/python.exe
+transcript folders: C--Users-pjdeb-Documents-CribbageQuizzer
+
+inline_code (Bash): 769 distinct input(s), 778 call(s)
+     quiet -> quiet    735 input(s), 744 call(s)
+      warn -> warn     34 input(s), 34 call(s)
+
+workflow_agreement (Workflow): 2 distinct input(s), 2 call(s)
+      warn -> warn     2 input(s), 2 call(s)
+
+SAME
