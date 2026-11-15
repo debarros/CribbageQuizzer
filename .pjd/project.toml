@@ -3,7 +3,8 @@
 # this repository's sessions made, replayed through the released and the candidate guard.
 # --released is left out on purpose: its default is the environment that the trunk's .pjd/uv.lock
 # names, which at an adoption is the release being moved from (plan cribbage/pin, Decision 359A).
-# Until machine/cribbage-hub makes the trunk, this command exits 2, and it runs only with --released
+# Since machine/cribbage-hub made the trunk (2026-11-12), that default resolves and the command runs
+# as written, `pjd run cribbage battery`; before it, the command exited 2 and ran only with --released
 # appended, as `pjd run cribbage battery -- --released <python>` (plan cribbage/catch-up).
 # --also names this clone by its path before the cutover renames it: once path_today names the
 # trunk, the replay reads the clone's transcripts only through --also, which matches them by the

@@ -1,6 +1,6 @@
 ---
 name: cribbage-pin-plan
-description: "Where plan cribbage/pin (the Documents clone's next-to-last plan, cribbage/catch-up being its last: .gitattributes with * -text, the .pjd pin to pjdtools 0.13.0, its environment, the rendered project files and this committed store) and its records live, its Decisions 359 to 362, and what its planning measured: * -text makes five files read as modified until git read-tree HEAD and then git checkout-index -f -a have run, the guards now run a pinned wheel whose absence denies every Bash call, pjd adopt cannot make a first pin, and the adapter's battery exits 2 until the cutover makes the trunk"
+description: "Where plan cribbage/pin (the Documents clone's next-to-last plan, cribbage/catch-up being its last: .gitattributes with * -text, the .pjd pin to pjdtools 0.13.0, its environment, the rendered project files and this committed store) and its records live, its Decisions 359 to 362, and what its planning measured: * -text makes five files read as modified until git read-tree HEAD and then git checkout-index -f -a have run, the guards now run a pinned wheel whose absence denies every Bash call, pjd adopt cannot make a first pin, and the adapter's battery, which exited 2 until the cutover made the trunk, runs as written since 2026-11-12"
 metadata:
   type: project
 ---
@@ -43,14 +43,17 @@ close-out closes, and then makes the hub `C:/Users/pjdeb/src/.hub/cribbage.git` 
   outside `src/.wt/<repo>/`), so the pin is written by the plan's own steps: `.pjd/pyproject.toml`,
   `uv lock --offline`, `pjdtools.env build` from the global interpreter, then `pjd render` from the new environment.
   `pjd render` needs `--tree` here, since the default tree must be the trunk or a worktree.
-- `pjd replay` is this repository's proof, and `--released` must be named while there is no trunk: its default is the
-  environment that the trunk's `.pjd/uv.lock` names. The replay of every call these transcripts hold, released
-  0.11.0 against candidate 0.13.0, read `SAME`. The adapter's battery leaves `--released` out, which is right from
-  the first adoption after the cutover and exits 2 before it.
+- `pjd replay` is this repository's proof, and `--released` had to be named while there was no trunk: its default is
+  the environment that the trunk's `.pjd/uv.lock` names. The replay of every call these transcripts held, released
+  0.11.0 against candidate 0.13.0, read `SAME`. The adapter's battery leaves `--released` out, so it exited 2 until
+  `machine/cribbage-hub` made the trunk `C:/Users/pjdeb/src/cribbage` on 2026-11-12; since then it runs as written:
+  `pjd run cribbage battery`, nothing appended, exited 0 and read `SAME` in a worktree on 2026-11-15.
 - A change to this repository's row of the machine's `repos.toml`, to whether `ops/memory/MEMORY.md` exists, or to
   `.pjd/project.toml`'s `[permissions] allow`, changes the render (Decision 325A). `machine/cribbage-hub` flips
   `converted` to true, which rewrites the land rule and the skill, so the first commit that lands through cribbage's
   hub must carry a fresh render or the gate's rule 8 refuses the push.
 - Until `machine/static-layer`, a session here runs the rendered hooks and the user-level ones both; their command
-  texts differ, so the harness does not deduplicate them. The commit-msg route still comes from
-  `~/.gitconfig-pjdtools-hooks`, so the `.githooks/commit-msg` rendered here is unused until the cutover.
+  texts differ, so the harness does not deduplicate them. The commit-msg route of `~/.gitconfig-pjdtools-hooks` is
+  included only for git directories under `C:/Users/pjdeb/Documents/`, so since the cutover it reaches neither the
+  trunk nor a worktree: a worktree's `config.worktree` sets `core.hooksPath` to its own `.githooks`, so the rendered
+  `.githooks/commit-msg` and `.githooks/pre-commit` run there (read 2026-11-15).
