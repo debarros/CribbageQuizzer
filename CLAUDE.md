@@ -39,6 +39,10 @@ adjacent to `app.R` before evaluating it (the `shiny.autoload.r` option, TRUE by
 R 4.5.2 is installed at `C:\Program Files\R\R-4.5.2` but is **not on PATH**. Invoke it by full path,
 or add `C:\Program Files\R\R-4.5.2\bin` to PATH first.
 
+Open `CribbageQuizzer.Rproj` from a worktree under `C:\Users\pjdeb\src\.wt\cribbage\`, never from the trunk
+`C:\Users\pjdeb\src\cribbage`: RStudio writes `.Rproj.user\` beside the `.Rproj`, and in the trunk the witness
+counts that ignored folder and holds cribbage.
+
 Installed: `shiny` 1.14.0, `bslib` 0.12.0, `testthat` 3.3.2. **Not installed:** `shinytest2`, `renv`.
 Install what a task needs rather than assuming it loads. There is no lockfile or dependency manifest —
 dependencies are whatever the user library happens to contain.
